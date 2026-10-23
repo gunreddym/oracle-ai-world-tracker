@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#143f4b">
+  <meta name="description" content="A personal mobile tracker for Oracle AI World 2026 Fusion Data Intelligence sessions.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AI World">
+  <link rel="stylesheet" href="styles.css">
+  <title>My AI World</title>
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="app-header">
+      <div class="eyebrow">Oracle AI World 2026</div>
+      <div class="header-row">
+        <div>
+          <h1>My FDI Agenda</h1>
+          <p class="event-meta">Oct 26–28 · Las Vegas time</p>
+        </div>
+        <button id="installButton" class="icon-button install-button" type="button" aria-label="Install app" hidden>Install</button>
+      </div>
+      <section id="nextSession" class="next-session" aria-live="polite"></section>
+    </header>
+
+    <main>
+      <section class="summary-bar" aria-label="Agenda summary">
+        <div><strong id="mustCount">0</strong><span>Must attend</span></div>
+        <div><strong id="savedCount">0</strong><span>Interested</span></div>
+        <div><strong id="noteCount">0</strong><span>Notes</span></div>
+      </section>
+
+      <nav id="dayTabs" class="day-tabs" aria-label="Conference days"></nav>
+
+      <section class="controls" aria-label="Filter sessions">
+        <label class="search-box">
+          <span aria-hidden="true">⌕</span>
+          <input id="searchInput" type="search" placeholder="Search sessions" autocomplete="off">
+        </label>
+        <select id="topicFilter" aria-label="Filter by topic">
+          <option value="all">All topics</option>
+        </select>
+        <label class="saved-toggle">
+          <input id="savedOnly" type="checkbox">
+          <span>My picks</span>
+        </label>
+      </section>
+
+      <div id="conflictBanner" class="conflict-banner" role="status" hidden></div>
+      <section id="sessionList" class="session-list" aria-live="polite"></section>
+      <p id="emptyState" class="empty-state" hidden>No sessions match this filter.</p>
+    </main>
+
+    <footer class="action-bar">
+      <button id="calendarButton" class="secondary-button" type="button">Add picks to calendar</button>
+      <button id="exportButton" class="primary-button" type="button">Export notes</button>
+    </footer>
+  </div>
+
+  <dialog id="installDialog">
+    <form method="dialog" class="dialog-card">
+      <button class="dialog-close" aria-label="Close">×</button>
+      <h2>Put it on your phone</h2>
+      <div id="installInstructions"></div>
+      <button class="primary-button" value="close">Got it</button>
+    </form>
+  </dialog>
+
+  <template id="sessionTemplate">
+    <article class="session-card">
+      <div class="session-time"></div>
+      <div class="session-content">
+        <div class="session-topline">
+          <span class="session-id"></span>
+          <span class="session-type"></span>
+        </div>
+        <h2 class="session-title"></h2>
+        <p class="session-description"></p>
+        <div class="tag-list"></div>
+        <div class="conflict-note" hidden></div>
+        <div class="session-actions">
+          <button class="priority-button" type="button"></button>
+          <button class="notes-button" type="button">Notes</button>
+        </div>
+        <div class="note-panel" hidden>
+          <label>
+            <span>Key insight, question, or follow-up</span>
+            <textarea rows="4" placeholder="Type your notes here…"></textarea>
+          </label>
+          <div class="saved-message" aria-live="polite">Saved on this device</div>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
