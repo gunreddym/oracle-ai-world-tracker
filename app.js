@@ -646,8 +646,28 @@ if (!window.matchMedia("(display-mode: standalone)").matches) {
   elements.installButton.hidden = false;
 }
 
+const APP_VERSION = 4;
+document.querySelector(".event-meta").textContent = `Oct 26–28 · Las Vegas time · v${APP_VERSION} · ${SESSIONS.length} sessions`;
+
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+  // Reload once when a new version takes over, so updates show without a second launch.
+  const hadController = Boolean(navigator.serviceWorker.controller);
+  let reloading = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadController || reloading) return;
+    reloading = true;
+    window.location.reload();
+  });
+
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").then((registration) => {
+      registration.update();
+      // iPhone home-screen apps often resume instead of relaunching, so check again on return.
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") registration.update();
+      });
+    }).catch(() => {});
+  });
 }
 
 render();
