@@ -8,6 +8,39 @@ const DAYS = [
 
 const SESSIONS = [
   {
+    id: "KEYNOTE-1",
+    date: "2026-10-26",
+    time: "09:30",
+    duration: 60,
+    type: "Keynote",
+    title: "Oracle: Where AI Means Business",
+    description: "Oracle executives, customers, and partners show AI built into trusted data and everyday business applications, with live demos and customer conversations.",
+    tags: ["Keynote", "Strategy", "AI agents"],
+    defaultPriority: "must"
+  },
+  {
+    id: "KEYNOTE-2",
+    date: "2026-10-27",
+    time: "09:00",
+    duration: 60,
+    type: "Keynote",
+    title: "Now That AI Works, What Are We Going to Do with It?",
+    description: "Oracle CEO Clay Magouyrk on what Oracle has learned putting AI to work across development, data, security, and infrastructure.",
+    tags: ["Keynote", "Strategy", "Platform"],
+    defaultPriority: "must"
+  },
+  {
+    id: "KEYNOTE-3",
+    date: "2026-10-27",
+    time: "15:30",
+    duration: 60,
+    type: "Keynote",
+    title: "The New Oracle Health Application Suite and the Age of AI",
+    description: "A look at Oracle Health's new application suite and upcoming Oracle AI capabilities.",
+    tags: ["Keynote", "Strategy"],
+    defaultPriority: "interested"
+  },
+  {
     id: "LRN1222",
     date: "2026-10-26",
     time: "11:30",
@@ -350,7 +383,7 @@ function renderSessions() {
       && (!query || searchable.includes(query))
       && (topic === "all" || session.tags.includes(topic))
       && (!pickedOnly || getPriority(session.id) !== "none");
-  });
+  }).sort((a, b) => a.time.localeCompare(b.time));
 
   elements.sessionList.replaceChildren();
   sessions.forEach((session) => elements.sessionList.append(createSessionCard(session, conflicts.get(session.id) || [])));

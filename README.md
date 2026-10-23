@@ -5,6 +5,7 @@ A mobile-first, offline personal tracker for the Fusion Data Intelligence sessio
 ## Features
 
 - All 16 sessions from the supplied schedule
+- The three mainstage keynotes from the [official keynotes page](https://www.oracle.com/ai-world/keynotes/)
 - Suggested ERP business analyst priorities
 - Must-attend and interested selections
 - Automatic conflict warnings
@@ -39,6 +40,7 @@ The install button inside the app also displays device-appropriate instructions.
 ## Important schedule assumptions
 
 - Dates and start times come from the supplied image.
+- Keynotes use an assumed 60-minute duration.
 - Learning sessions, the roundtable, and HOL2325 use an assumed 45-minute duration.
 - HOL2327 uses an assumed 60-minute duration.
 - Calendar entries use the `America/Los_Angeles` time zone.
