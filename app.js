@@ -218,6 +218,7 @@ const SESSIONS = [
   }
 ];
 
+const APP_VERSION = 5;
 const STORAGE_KEY = "oracle-ai-world-tracker-v1";
 const PRIORITY_ORDER = ["none", "interested", "must"];
 const PRIORITY_LABELS = {
@@ -243,7 +244,20 @@ const elements = {
   exportButton: document.querySelector("#exportButton"),
   installButton: document.querySelector("#installButton"),
   installDialog: document.querySelector("#installDialog"),
-  installInstructions: document.querySelector("#installInstructions")
+  installInstructions: document.querySelector("#installInstructions"),
+  eventMeta: document.querySelector(".event-meta"),
+  addSessionButton: document.querySelector("#addSessionButton"),
+  addDialog: document.querySelector("#addDialog"),
+  addForm: document.querySelector("#addForm"),
+  addClose: document.querySelector("#addClose"),
+  addTitle: document.querySelector("#addTitle"),
+  addDay: document.querySelector("#addDay"),
+  addTime: document.querySelector("#addTime"),
+  addDuration: document.querySelector("#addDuration"),
+  addPriority: document.querySelector("#addPriority"),
+  addCode: document.querySelector("#addCode"),
+  addRoom: document.querySelector("#addRoom"),
+  addError: document.querySelector("#addError")
 };
 
 let state = loadState();
@@ -261,11 +275,31 @@ function loadState() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     return {
       priorities: { ...defaults.priorities, ...(saved?.priorities || {}) },
-      notes: { ...defaults.notes, ...(saved?.notes || {}) }
+      notes: { ...defaults.notes, ...(saved?.notes || {}) },
+      custom: Array.isArray(saved?.custom) ? saved.custom.filter(isValidCustomSession) : []
     };
   } catch {
-    return defaults;
+    return { ...defaults, custom: [] };
   }
+}
+
+function isValidCustomSession(session) {
+  return Boolean(session)
+    && typeof session.id === "string"
+    && typeof session.title === "string"
+    && DAYS.some((day) => day.date === session.date)
+    && /^\d{2}:\d{2}$/.test(session.time)
+    && Number.isFinite(session.duration);
+}
+
+// Built-in sessions plus the ones added on this phone.
+function allSessions() {
+  return [...SESSIONS, ...state.custom];
+}
+
+function displayCode(session) {
+  if (!session.custom) return session.id;
+  return session.code || "My session";
 }
 
 function saveState() {
@@ -298,7 +332,7 @@ function getPriority(sessionId) {
 }
 
 function getPickedSessions() {
-  return SESSIONS.filter((session) => getPriority(session.id) !== "none");
+  return allSessions().filter((session) => getPriority(session.id) !== "none");
 }
 
 function getConflictMap() {
@@ -340,12 +374,13 @@ function renderSummary() {
   elements.mustCount.textContent = priorities.filter((priority) => priority === "must").length;
   elements.savedCount.textContent = priorities.filter((priority) => priority === "interested").length;
   elements.noteCount.textContent = Object.values(state.notes).filter((note) => note.trim()).length;
+  elements.eventMeta.textContent = `Oct 26–28 · Las Vegas time · v${APP_VERSION} · ${allSessions().length} sessions`;
 }
 
 function renderDayTabs() {
   elements.dayTabs.replaceChildren();
   DAYS.forEach((day) => {
-    const picks = SESSIONS.filter((session) => session.date === day.date && getPriority(session.id) !== "none").length;
+    const picks = allSessions().filter((session) => session.date === day.date && getPriority(session.id) !== "none").length;
     const button = document.createElement("button");
     button.type = "button";
     button.className = "day-tab";
@@ -361,14 +396,11 @@ function renderDayTabs() {
 }
 
 function renderFilters() {
-  if (elements.topicFilter.options.length > 1) return;
-  const tags = [...new Set(SESSIONS.flatMap((session) => session.tags))].sort();
-  tags.forEach((tag) => {
-    const option = document.createElement("option");
-    option.value = tag;
-    option.textContent = tag;
-    elements.topicFilter.append(option);
-  });
+  // Rebuilt on every render so the "My sessions" topic appears once a session is added.
+  const current = elements.topicFilter.value;
+  const tags = [...new Set(allSessions().flatMap((session) => session.tags))].sort();
+  elements.topicFilter.replaceChildren(new Option("All topics", "all"), ...tags.map((tag) => new Option(tag, tag)));
+  elements.topicFilter.value = tags.includes(current) ? current : "all";
 }
 
 function renderSessions() {
@@ -377,8 +409,8 @@ function renderSessions() {
   const pickedOnly = elements.savedOnly.checked;
   const conflicts = getConflictMap();
 
-  const sessions = SESSIONS.filter((session) => {
-    const searchable = `${session.id} ${session.title} ${session.description} ${session.tags.join(" ")}`.toLowerCase();
+  const sessions = allSessions().filter((session) => {
+    const searchable = `${displayCode(session)} ${session.title} ${session.description} ${session.tags.join(" ")}`.toLowerCase();
     return session.date === selectedDay
       && (!query || searchable.includes(query))
       && (topic === "all" || session.tags.includes(topic))
@@ -390,7 +422,7 @@ function renderSessions() {
   elements.emptyState.hidden = sessions.length > 0;
 
   const dayConflicts = [...conflicts.entries()].filter(([sessionId]) => {
-    return SESSIONS.find((session) => session.id === sessionId)?.date === selectedDay;
+    return allSessions().find((session) => session.id === sessionId)?.date === selectedDay;
   });
   const conflictCount = dayConflicts.reduce((total, [, overlapping]) => total + overlapping.length, 0) / 2;
   elements.conflictBanner.hidden = conflictCount === 0;
@@ -404,7 +436,7 @@ function createSessionCard(session, conflicts) {
   const priority = getPriority(session.id);
   card.dataset.priority = priority;
   card.querySelector(".session-time").textContent = formatTime(session.time);
-  card.querySelector(".session-id").textContent = session.id;
+  card.querySelector(".session-id").textContent = displayCode(session);
   card.querySelector(".session-type").textContent = session.type;
   card.querySelector(".session-title").textContent = session.title;
   card.querySelector(".session-description").textContent = session.description;
@@ -420,7 +452,20 @@ function createSessionCard(session, conflicts) {
   const conflictNote = card.querySelector(".conflict-note");
   if (conflicts.length) {
     conflictNote.hidden = false;
-    conflictNote.textContent = `Conflicts with ${conflicts.map((item) => `${item.id} ${item.title}`).join(", ")}`;
+    conflictNote.textContent = `Conflicts with ${conflicts.map((item) => `${displayCode(item)} ${item.title}`).join(", ")}`;
+  }
+
+  if (session.custom) {
+    const deleteButton = card.querySelector(".delete-button");
+    deleteButton.hidden = false;
+    deleteButton.addEventListener("click", () => {
+      if (!window.confirm(`Delete "${session.title}"? Its notes will be deleted too.`)) return;
+      state.custom = state.custom.filter((item) => item.id !== session.id);
+      delete state.priorities[session.id];
+      delete state.notes[session.id];
+      saveState();
+      render();
+    });
   }
 
   const priorityButton = card.querySelector(".priority-button");
@@ -488,7 +533,7 @@ function renderNextSession() {
   title.textContent = upcoming.title;
   const detail = document.createElement("span");
   detail.className = "next-detail";
-  detail.textContent = `${day.label}, ${day.display} · ${formatTime(upcoming.time)} · ${upcoming.id}`;
+  detail.textContent = `${day.label}, ${day.display} · ${formatTime(upcoming.time)} · ${displayCode(upcoming)}`;
   elements.nextSession.append(label, title, detail);
 }
 
@@ -538,8 +583,8 @@ function exportNotes() {
     sessions.forEach((session) => {
       const priority = getPriority(session.id) === "must" ? "Must attend" : "Interested";
       lines.push(
-        `### ${formatTime(session.time)} — ${session.id}: ${session.title}`,
-        `**Priority:** ${priority}`,
+        `### ${formatTime(session.time)} — ${displayCode(session)}: ${session.title}`,
+        `**Priority:** ${priority}${session.room ? ` · **Room:** ${session.room}` : ""}`,
         "",
         state.notes[session.id]?.trim() || "_No notes yet._",
         ""
@@ -581,9 +626,9 @@ function exportCalendar() {
     `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "")}`,
     `DTSTART;TZID=America/Los_Angeles:${formatIcsDate(session.date, session.time)}`,
     `DTEND;TZID=America/Los_Angeles:${formatIcsDate(session.date, session.time, session.duration)}`,
-    `SUMMARY:${escapeIcs(`${session.id} — ${session.title}`)}`,
+    `SUMMARY:${escapeIcs(`${displayCode(session)} — ${session.title}`)}`,
     `DESCRIPTION:${escapeIcs(`${session.description}\n\nVerify the room and final time in the official Oracle AI World app.`)}`,
-    "LOCATION:The Venetian Convention & Expo Center, Las Vegas",
+    `LOCATION:${escapeIcs(session.room ? `${session.room}, The Venetian, Las Vegas` : "The Venetian Convention & Expo Center, Las Vegas")}`,
     "BEGIN:VALARM",
     "TRIGGER:-PT15M",
     "ACTION:DISPLAY",
@@ -636,6 +681,50 @@ elements.installButton.addEventListener("click", async () => {
   showInstallHelp();
 });
 
+function openAddDialog() {
+  elements.addForm.reset();
+  elements.addError.hidden = true;
+  elements.addDay.replaceChildren(...DAYS.map((day) => new Option(`${day.label}, ${day.display}`, day.date)));
+  elements.addDay.value = selectedDay;
+  elements.addDialog.showModal();
+}
+
+function saveCustomSession(event) {
+  event.preventDefault();
+  const title = elements.addTitle.value.trim();
+  const time = elements.addTime.value;
+  if (!title || !/^\d{2}:\d{2}$/.test(time)) {
+    elements.addError.textContent = "Enter a title and a start time.";
+    elements.addError.hidden = false;
+    return;
+  }
+
+  const room = elements.addRoom.value.trim();
+  const session = {
+    id: `MY-${Date.now()}`,
+    custom: true,
+    code: elements.addCode.value.trim().toUpperCase(),
+    date: elements.addDay.value,
+    time,
+    duration: Number(elements.addDuration.value),
+    type: "Added by me",
+    title,
+    room,
+    description: room ? `Room: ${room}` : "Added on my phone.",
+    tags: ["My sessions"]
+  };
+
+  state.custom.push(session);
+  state.priorities[session.id] = elements.addPriority.value;
+  saveState();
+  selectedDay = session.date;
+  elements.addDialog.close();
+  render();
+}
+
+elements.addSessionButton.addEventListener("click", openAddDialog);
+elements.addClose.addEventListener("click", () => elements.addDialog.close());
+elements.addForm.addEventListener("submit", saveCustomSession);
 elements.searchInput.addEventListener("input", renderSessions);
 elements.topicFilter.addEventListener("change", renderSessions);
 elements.savedOnly.addEventListener("change", renderSessions);
@@ -646,8 +735,6 @@ if (!window.matchMedia("(display-mode: standalone)").matches) {
   elements.installButton.hidden = false;
 }
 
-const APP_VERSION = 4;
-document.querySelector(".event-meta").textContent = `Oct 26–28 · Las Vegas time · v${APP_VERSION} · ${SESSIONS.length} sessions`;
 
 if ("serviceWorker" in navigator) {
   // Reload once when a new version takes over, so updates show without a second launch.

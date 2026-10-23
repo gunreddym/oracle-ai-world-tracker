@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="AI World">
-  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="styles.css?v=5">
   <title>My AI World</title>
 </head>
 <body>
@@ -54,6 +54,7 @@
       <div id="conflictBanner" class="conflict-banner" role="status" hidden></div>
       <section id="sessionList" class="session-list" aria-live="polite"></section>
       <p id="emptyState" class="empty-state" hidden>No sessions match this filter.</p>
+      <button id="addSessionButton" class="add-session-button" type="button">+ Add a session</button>
     </main>
 
     <footer class="action-bar">
@@ -68,6 +69,56 @@
       <h2>Put it on your phone</h2>
       <div id="installInstructions"></div>
       <button class="primary-button" value="close">Got it</button>
+    </form>
+  </dialog>
+
+  <dialog id="addDialog">
+    <form id="addForm" class="dialog-card add-form">
+      <button id="addClose" class="dialog-close" type="button" aria-label="Close">×</button>
+      <h2>Add a session</h2>
+      <label>
+        <span>Title</span>
+        <input id="addTitle" type="text" maxlength="140" required placeholder="Session title">
+      </label>
+      <div class="form-row">
+        <label>
+          <span>Day</span>
+          <select id="addDay"></select>
+        </label>
+        <label>
+          <span>Start time</span>
+          <input id="addTime" type="time" step="300" required>
+        </label>
+      </div>
+      <div class="form-row">
+        <label>
+          <span>Length</span>
+          <select id="addDuration">
+            <option value="30">30 min</option>
+            <option value="45" selected>45 min</option>
+            <option value="60">1 hr</option>
+            <option value="90">1 hr 30 min</option>
+            <option value="120">2 hr</option>
+          </select>
+        </label>
+        <label>
+          <span>Priority</span>
+          <select id="addPriority">
+            <option value="must" selected>Must attend</option>
+            <option value="interested">Interested</option>
+          </select>
+        </label>
+      </div>
+      <label>
+        <span>Session code (optional)</span>
+        <input id="addCode" type="text" maxlength="20" autocapitalize="characters" placeholder="e.g. LRN1234">
+      </label>
+      <label>
+        <span>Room (optional)</span>
+        <input id="addRoom" type="text" maxlength="80" placeholder="e.g. Venetian Level 3, Lido 3001">
+      </label>
+      <p id="addError" class="form-error" role="alert" hidden></p>
+      <button class="primary-button" type="submit">Save session</button>
     </form>
   </dialog>
 
@@ -86,6 +137,7 @@
         <div class="session-actions">
           <button class="priority-button" type="button"></button>
           <button class="notes-button" type="button">Notes</button>
+          <button class="delete-button" type="button" hidden>Delete</button>
         </div>
         <div class="note-panel" hidden>
           <label>
@@ -98,6 +150,6 @@
     </article>
   </template>
 
-  <script src="app.js?v=4" defer></script>
+  <script src="app.js?v=5" defer></script>
 </body>
 </html>

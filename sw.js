@@ -1,5 +1,5 @@
-const CACHE_NAME = "ai-world-tracker-v4";
-const APP_SHELL = ["./", "./index.html", "./styles.css?v=4", "./app.js?v=4", "./manifest.webmanifest", "./icon.svg", "./apple-touch-icon.png"];
+const CACHE_NAME = "ai-world-tracker-v5";
+const APP_SHELL = ["./", "./index.html", "./styles.css?v=5", "./app.js?v=5", "./manifest.webmanifest", "./icon.svg", "./apple-touch-icon.png"];
 const NETWORK_TIMEOUT_MS = 3000;
 
 self.addEventListener("install", (event) => {
